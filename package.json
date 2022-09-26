@@ -1,0 +1,28 @@
+{
+  "name": "livechatsample",
+  "version": "1.0.0",
+  "description": "Live Chat Example",
+  "main": "index.js",
+  "scripts": {
+    "start": "node express.js", 
+    "dev": "nodemon express.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaypinedabengco/liveChatSample.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jaypinedabengco/liveChatSample/issues"
+  },
+  "homepage": "https://github.com/jaypinedabengco/liveChatSample#readme",
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "express": "^4.18.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}

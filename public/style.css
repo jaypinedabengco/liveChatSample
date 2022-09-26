@@ -1,0 +1,12 @@
+.comments {
+  font-size: 13px;
+  padding: 10px;
+}
+
+.comments p {
+  margin: 0;
+}
+
+.comments:nth-child(odd) {
+  background-color: #e7e7e7;
+}
