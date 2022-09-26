@@ -30,26 +30,48 @@ async function _setCommenting() {
 /**
  * 
  */
-async function _sendMessage({commenter_name, comment, replied_to_comment_id}) {
+async function _sendMessage({commenter_name, comment}) {
   const body = {
     commenter_name, 
-    comment,
-    replied_to_comment_id, 
+    comment
   }
   await $.post(`${host}/api/comment`, body);
 }
 
 /**
  * 
+ * @param {*} commentId 
+ * @returns 
+ */
+async function _getReplies(commentId) {
+  return await $.get(`${host}/api/comment/reply/${commentId}`)
+}
+
+/**
+ * 
+ * @param {*} commentId 
+ * @returns 
+ */
+ async function _sendReply(commentId, {commenter_name, comment}) {
+  const body = {
+    commenter_name, 
+    comment
+  }   
+  return await $.post(`${host}/api/comment/reply/${commentId}`, body)
+}
+
+
+/**
+ * 
  */
 function _showHideMessage() {
   if (!$('#name').val()) {
-    $('#send').hide();
-    $('#message').hide();
+    $('#comments-container').hide();
+    $('#no-name-error').show();
     return;
   }
-  $('#send').show();
-  $('#message').show();
+  $('#comments-container').show();
+  $('#no-name-error').hide();
   return;
 }
 
@@ -80,6 +102,32 @@ function _event_onClickSendButton() {
   });
 }
 
+function _event_onClickReplyButton() {
+  $('body').on('click', '.reply_button', async function() {
+    const {commentId} = $(this).data();
+
+    const comment = $(`.comments-${commentId} textarea.reply`).val();
+
+    if ( !$("#name").val() ) {
+      return alert('Name is required!')
+    }
+
+    if ( !comment ) {
+      return alert('Reply is required!')
+    }
+
+    await _sendReply(commentId, {
+      commenter_name: $("#name").val(),
+      comment,
+    });
+
+    // remove value
+    $(`.comments-${commentId} textarea.reply`).val('')
+
+    refreshReplyList(commentId)
+  })
+}
+
 /**
  * 
  */
@@ -93,12 +141,75 @@ function _event_onChangeName() {
  * 
  */
 function _event_onTyping() {
-  $('#message').keyup(() => {
+  $('body').on('keyup', '#message, textarea.reply', () => {
     if (!$('#name').val()) {
       return;
     }
     _setCommenting();
-  });
+  })
+  // $('#message').keyup(() => {
+  //   if (!$('#name').val()) {
+  //     return;
+  //   }
+  //   _setCommenting();
+  // });
+}
+
+/**
+ * 
+ * @param {*} commentId 
+ */
+async function refreshReplyList(commentId) {
+
+  if ( !$(`.comments-${commentId} .replies`).length ) {
+    return;
+  }
+
+  const replies = await _getReplies(commentId)
+  console.log({replies});
+  replies.forEach(({
+    id, 
+    comment,
+    commenter_name,
+    create_datetime
+  }) => {
+    
+    const reply = $(`.comments-${commentId} .replies-${id}`)
+
+    if ( reply.length ) {
+      return;
+    }
+
+    $(`.comments-${commentId} .replies`).append(`
+      <div class="comments replies-${id}">
+        <p>
+          ${comment}
+        </p>
+        <br />
+        <p class="user">User: ${commenter_name} </p>
+        <p class="create_datetime">Date: ${new Date(create_datetime).toString()} </p>
+      </div>
+    `)
+  })
+}
+
+async function showReplyView(commentId) {
+  // show
+  $(`.comments-${commentId}`).addClass('replying')
+
+  // fetch reply list
+  await refreshReplyList(commentId);
+
+}
+
+/**
+ * 
+ */
+function _event_addReplyToComment() {
+  $('body').on('click', 'a.show-reply, a.reply-to-comment', function() {
+    const {commentId} = $(this).data();
+    showReplyView(commentId)
+  })
 }
 
 function _dom_setCommenting(commenting) {
@@ -125,24 +236,59 @@ function _dom_setCommenting(commenting) {
  * @param {*} comments 
  */
 function _dom_setComments(comments) {
-  $('#messages').html('')
+  // $('#messages').html('')
 
-  comments.forEach(({
-    comment, 
-    commenter_name,
-    create_datetime
-  }) => {
-    $('#messages').append(`
-      <div class="comments">
-        <p>
-          ${comment}
-        </p>
-        <br />
-        <p class="user">User: ${commenter_name} </p>
-        <p class="create_datetime">Date: ${new Date(create_datetime).toString()} </p>
+  comments.forEach((comment) => {
+    const {
+      id
+    } = comment;
+    if ( $(`.comments-${id}`).length ) {
+      return;
+    }
+
+    $('#messages').append(
+      `
+      <div data-comment-id="${id}" class="comments comments-${id}">
+        ${_buildComment(comment)}
       </div>
-    `)
+      `
+    )
   })
+}
+
+/**
+ * 
+ * @param {*} param0 
+ * @returns 
+ */
+function _buildComment({
+  id,
+  comment, 
+  commenter_name,
+  create_datetime,
+  reply_count
+}) {
+  return `
+      <p class="comment-details">
+        ${comment}
+      </p>
+      <br />
+      <p class="user">User: ${commenter_name} </p>
+      <p class="create_datetime">Date: ${new Date(create_datetime).toString()} </p>
+      <a href="javascript:void(0);" class="show-reply" data-comment-id="${id}"> Reply </a>
+      <div class="reply_container">
+        <div class="replies"></div>
+        <textarea
+          class="reply"
+          class="form-control"
+          placeholder="Your Reply Here"></textarea>
+        <button class="reply_button btn btn-success" data-comment-id="${id}"> Reply </button>
+      </div> 
+      <br />
+      ${
+        !reply_count ? '' : `<a href="javascript:void(0);" class="reply-to-comment" data-comment-id="${id}"> ${reply_count} ${ reply_count > 1? 'Replies': 'Reply' } </a>`
+      }
+  `
 }
 
 /**
@@ -158,8 +304,29 @@ async function _refreshCommentsAndCommenting() {
 /**
  * 
  */
+function _refreshReplies() {
+  const commentIds = []
+  
+  $('.comments').map(function () {
+    const {commentId} = $(this).data()
+    commentIds.push(commentId);
+  })
+
+  commentIds.forEach(commentId => refreshReplyList(commentId))
+}
+
+/**
+ * 
+ */
 function _listen_comments() {
   setInterval(_refreshCommentsAndCommenting, 5000)
+}
+
+/**
+ * 
+ */
+ function _listen_replies() {
+  setInterval(_refreshReplies, 5000)
 }
 
 ////
@@ -173,9 +340,12 @@ $(() => {
 
   // add listner here
   _listen_comments();
+  _listen_replies();
 
   // add event handling here
+  _event_addReplyToComment();
   _event_onClickSendButton();
+  _event_onClickReplyButton();
   _event_onChangeName();
   _event_onTyping();
 

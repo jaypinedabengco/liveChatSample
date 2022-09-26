@@ -20,9 +20,8 @@ async function getById(id) {
 *
 */
 async function getList() {
-  return data;
+  return data.sort((a, b) => a.create_datetime - b.create_datetime) // order by create_datetime ASC;
 }
-
 
 /**
 *
@@ -43,5 +42,4 @@ async function save(
     replied_to_comment_id,
     comment
   })
-  
 }

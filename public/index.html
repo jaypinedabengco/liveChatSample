@@ -30,21 +30,27 @@
       <br />
       <div class="jumbotron">
         <h1 class="display-4">Send Message</h1>
-        <hr />
-        <h4>Comments</h4>
-        <div id="messages"></div>
-        <br />
-        <hr />
-        <input id="name" class="form-control" placeholder="Name" />
-        <br />
-        <textarea
-          id="message"
-          class="form-control"
-          placeholder="Your Message Here"
-        ></textarea>
-        <br />
-        <div id="commenting"></div>
-        <button id="send" class="btn btn-success">Send</button>
+        <input id="name" class="form-control" placeholder="User Name" />
+        <div id="comments-container">
+          <hr />
+          <h4>Comments</h4>
+          <div id="messages"></div>
+          <br />
+          <hr />
+          <br />
+          <textarea
+            id="message"
+            class="form-control"
+            placeholder="Your Message Here"></textarea>
+          <br />
+          <div id="commenting"></div>
+          <button id="send" class="btn btn-success">Send</button>
+        </div>
+        <div id="no-name-error">
+          <div class="alert alert-danger mt-3" role="alert">
+            Name is required.
+          </div>
+        </div>
       </div>
     </div>
     <script src="script.js"></script>

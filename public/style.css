@@ -10,3 +10,40 @@
 .comments:nth-child(odd) {
   background-color: #e7e7e7;
 }
+
+.comments .reply_container {
+  display: none;
+}
+
+.comments.replying .reply_container {
+  display: unset;
+}
+
+.comments.replying .reply-to-comment,
+.comments.replying .show-reply {
+  display: none;
+}
+
+.comments .replies {
+  padding: 10px;
+}
+
+.replies .comments {
+  background-color: #7a7575;
+  color: white;
+}
+
+.replies .comments:nth-child(odd) {
+  background-color: #9c9791;
+}
+
+.user,
+.create_datetime {
+  font-size: 10px;
+  font-style: italic;
+}
+
+.comment-details {
+  padding: 10px;
+  background-color: #fbf9f9;
+}
